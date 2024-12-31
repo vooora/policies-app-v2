@@ -11,6 +11,7 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const List<String> list = <String>['English', 'Hindi', 'Telugu', 'Tamil'];
 const List<String> secondList = <String>[
@@ -64,7 +65,7 @@ String getLanguageCode(String language) {
     case 'Tamil':
       return 'ta_IN';
     default:
-      return 'en'; // Default to English if no match found
+      return 'en_US'; // Default to English if no match found
   }
 }
 
@@ -89,6 +90,24 @@ class _InputFormState extends State<InputForm> {
   TextEditingController _questionController = TextEditingController();
 
   String secondDropdownValue = secondList.first;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguagePreference();
+  }
+
+  Future<void> _loadLanguagePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      dropdownValue = prefs.getString('selectedLanguage') ?? list.first;
+    });
+  }
+
+  Future<void> _saveLanguagePreference(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedLanguage', language);
+  }
 
   Future<void> _listen() async {
     if (!_isListening && await _speech.initialize()) {
@@ -159,6 +178,7 @@ class _InputFormState extends State<InputForm> {
                       setState(() {
                         dropdownValue = value!;
                       });
+                      _saveLanguagePreference(value!);
                     },
                     items: list.map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
@@ -284,7 +304,7 @@ class _InputFormState extends State<InputForm> {
                               String modifiedQuestion = _question;
                               if (secondDropdownValue != 'None') {
                                 modifiedQuestion +=
-                                    'I am from $secondDropdownValue.';
+                                    'I am from $secondDropdownValue. Answer in the language $dropdownValue';
                               }
                               final res = await fetchResponse(modifiedQuestion);
                               setState(() {

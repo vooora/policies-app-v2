@@ -214,22 +214,32 @@ class _InputFormState extends State<InputForm> {
                         ),
                       ),
                       const SizedBox(width: 5),
-                      IconButton(
-                          iconSize: 20,
-                          style: ButtonStyle(
-                              shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30))),
-                              backgroundColor: MaterialStateProperty.all(
-                                  ThemeColours.primaryColor)),
-                          icon: Icon(icon, color: Colors.white),
-                          onPressed: () async {
-                            await _listen();
-                            setState(() {
-                              _question = _transcription;
-                            });
-                          })
+                      GestureDetector(
+                        onTapDown: (_) async {
+                          // Start listening when the button is pressed
+                          await _listen();
+                          setState(() {
+                            _question = _transcription;
+                          });
+                        },
+                        onTapUp: (_) async {
+                          // Stop listening when the button is released
+                          await _speech.stop();
+                        },
+                        onTapCancel: () async {
+                          // Stop listening if the press is canceled (e.g., user drags away)
+                          await _speech.stop();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: ThemeColours.primaryColor,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: EdgeInsets.all(
+                              8), // Optional: Add padding for better UX
+                          child: Icon(icon, color: Colors.white, size: 20),
+                        ),
+                      )
                     ],
                   ),
                   const SizedBox(height: 13),

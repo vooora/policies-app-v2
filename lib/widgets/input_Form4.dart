@@ -1,18 +1,18 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:policies_new/models/Response.dart';
 import 'package:policies_new/screens/answer_screen.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:policies_new/models/Response.dart';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:policies_new/utils.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:policies_new/widgets/sound_recorder.dart';
-import 'package:record/record.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'dart:io';
 
-const List<String> list = <String>['English', 'Hindi', 'Telugu', 'Tamil'];
+class InputForm extends StatefulWidget {
+  const InputForm({super.key});
+
+  @override
+  State<InputForm> createState() => _InputFormState();
+}
+
 const List<String> secondList = <String>[
   'None',
   'Andaman Nicobar',
@@ -53,60 +53,67 @@ const List<String> secondList = <String>[
   'West Bengal'
 ];
 
-String getLanguageCode(String language) {
-  switch (language) {
-    case 'English':
-      return 'en';
-    case 'Hindi':
-      return 'hi';
-    case 'Telugu':
-      return 'te';
-    case 'Tamil':
-      return 'ta';
-    default:
-      return 'en'; // Default to English if no match found
-  }
-}
-
-class InputForm extends StatefulWidget {
-  const InputForm({super.key});
-
-  @override
-  State<InputForm> createState() => _InputFormState();
-}
-
-Future<String> getAudioFilePath() async {
-  Directory appDocDir = await getApplicationDocumentsDirectory();
-  String filePath = '${appDocDir.path}/my_audio.aac';
-  return filePath;
-}
+const List<String> list = <String>['English', 'Hindi', 'Telugu', 'Tamil'];
 
 class _InputFormState extends State<InputForm> {
-  stt.SpeechToText _speech = stt.SpeechToText();
+  SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
   bool _isListening = false;
+  String _lastWords = '';
+  String? _selectedLocale;
 
-  String _transcription = '';
+  List<String> _locales = [];
+  String _transcription = ''; // Holds the final transcribed text
   TextEditingController _questionController = TextEditingController();
 
   String secondDropdownValue = secondList.first;
 
-  Future<void> _listen() async {
-    if (!_isListening && await _speech.initialize()) {
-      setState(() => _isListening = true);
-      _speech.listen(
-        onResult: (val) {
-          setState(() {
-            _transcription = val.recognizedWords;
-            _questionController.text = _transcription;
-          });
-          print('Transcription: $_transcription');
-        },
-        localeId: getLanguageCode(dropdownValue), // Set language
-      );
-    } else {
-      setState(() => _isListening = false);
-      _speech.stop();
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
+
+  /// Initialize speech and fetch available locales
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize();
+    if (_speechEnabled) {
+      var locales = await _speechToText.locales();
+      setState(() {
+        _locales = locales.map((locale) => locale.localeId).toList();
+        if (_locales.isNotEmpty) {
+          _selectedLocale = _locales[0]; // Default to the first locale
+        }
+      });
     }
+  }
+
+  /// Start speech recognition with the selected locale
+  void _startListening() async {
+    if (_selectedLocale != null) {
+      setState(() => _isListening = true);
+      await _speechToText.listen(
+        onResult: _onSpeechResult,
+        localeId: _selectedLocale!,
+      );
+    }
+  }
+
+  /// Stop speech recognition
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {
+      _isListening = false;
+    });
+  }
+
+  /// Callback when speech recognition results are available
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      _lastWords = result.recognizedWords;
+      _transcription = _lastWords; // Update transcription with recognized words
+      _questionController.text = _transcription; // Reflect in the input field
+    });
   }
 
   Future<CustomResponse> fetchResponse(String question) async {
@@ -117,7 +124,7 @@ class _InputFormState extends State<InputForm> {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       encoding: Encoding.getByName('utf-8'),
-      body: {"body": _question},
+      body: {"body": question},
     );
     final body = jsonDecode(res.body);
     if (body == "null") {
@@ -128,178 +135,137 @@ class _InputFormState extends State<InputForm> {
   }
 
   bool _loading = false;
-  var _question = "";
-  String dropdownValue = list.first;
+
   @override
   Widget build(BuildContext context) {
-    final icon = _isListening ? Icons.stop : Icons.mic;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24.0, 0.0, 24.0, 24.0),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 47),
-              child: Column(
-                children: [
-                  Text('ASK A QUESTION', style: ThemeText.titleText2),
-                  const SizedBox(height: 50),
-                  DropdownButtonFormField(
-                    dropdownColor: Colors.white,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5)),
-                        label: Text("Choose Input Language",
-                            style: ThemeText.bodyText)),
-                    value: dropdownValue,
-                    onChanged: (String? value) {
-                      setState(() {
-                        dropdownValue = value!;
-                      });
-                    },
-                    items: list.map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, style: TextStyle(fontSize: 12)),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 13),
-                  DropdownButtonFormField(
-                    dropdownColor: Colors.white,
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5)),
-                        label: Text("Choose Input State",
-                            style: ThemeText.bodyText)),
-                    value: secondDropdownValue,
-                    onChanged: (String? value) {
-                      setState(() {
-                        secondDropdownValue = value!;
-                      });
-                    },
-                    items: secondList
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, style: TextStyle(fontSize: 10.9)),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 13),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _questionController,
-                          onSubmitted: (value) {
-                            //in attempt to make enter button on simulator work
-                            setState(() {
-                              _question = value;
-                            });
-                          },
-                          onChanged: (value) {
-                            setState(() {
-                              _question = value;
-                            });
-                          },
-                          decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5)),
-                              label: Text("Enter your question",
-                                  style: ThemeText.bodyText)),
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      IconButton(
-                          iconSize: 20,
-                          style: ButtonStyle(
-                              shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30))),
-                              backgroundColor: MaterialStateProperty.all(
-                                  ThemeColours.primaryColor)),
-                          icon: Icon(icon, color: Colors.white),
-                          onPressed: () async {
-                            await _listen();
-                            setState(() {
-                              _question = _transcription;
-                            });
-                          })
-                    ],
-                  ),
-                  const SizedBox(height: 13),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      SizedBox(
-                        //see change
-                        height: 40,
-                        width: 115,
-                        child: GestureDetector(
-                          //in attempt to make enter button on simulator work
-                          onTap: () {
-                            setState(() {
-                              _loading = true;
-                            });
-                          },
-                          child: IconButton(
-                            style: ButtonStyle(
-                                shape: MaterialStateProperty.all<
-                                        RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(5))),
-                                backgroundColor: MaterialStateProperty.all(
-                                    ThemeColours.primaryColor)),
-                            icon: !_loading
-                                ? const Icon(Icons.arrow_forward_outlined,
-                                    color: Colors.white)
-                                : const CircularProgressIndicator(//change theme
-                                    ),
-                            onPressed: () async {
-                              setState(() {
-                                _loading = true;
-                              });
-                              String modifiedQuestion = _question;
-                              if (secondDropdownValue != 'None') {
-                                modifiedQuestion +=
-                                    'I am from $secondDropdownValue.';
-                              }
-                              final res = await fetchResponse(modifiedQuestion);
-                              setState(() {
-                                _loading = false;
-                              });
-                              if (res.type == "null") {
-                                return;
-                              } else {
-                                if (!context.mounted) {
-                                  return;
-                                }
-                                Navigator.of(context)
-                                    .push(MaterialPageRoute(builder: (ctx) {
-                                  return AnswerScreen(res: res);
-                                }));
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Ask a question:',
+                style: TextStyle(fontSize: 20.0),
               ),
             ),
-          ),
+            const SizedBox(height: 13),
+            DropdownButtonFormField(
+              dropdownColor: Colors.white,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                label: Text("Choose Input State"),
+              ),
+              value: secondDropdownValue,
+              onChanged: (String? value) {
+                setState(() {
+                  secondDropdownValue = value!;
+                });
+              },
+              items: secondList.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value, style: TextStyle(fontSize: 10.9)),
+                );
+              }).toList(),
+            ),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  _speechToText.isListening
+                      ? '$_lastWords'
+                      : _speechEnabled
+                          ? 'Tap the microphone to start listening...'
+                          : 'Speech not available',
+                ),
+              ),
+            ),
+            // Dropdown to select language
+            Container(
+              padding: EdgeInsets.all(16),
+              child: DropdownButton<String>(
+                value: _selectedLocale,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedLocale = newValue;
+                  });
+                },
+                items: _locales.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  height: 40,
+                  width: 115,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: IconButton(
+                      icon: !_loading
+                          ? const Icon(Icons.arrow_forward_outlined,
+                              color: Colors.white)
+                          : const CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                      onPressed: () async {
+                        setState(() {
+                          _loading = true;
+                        });
+
+                        // Use the transcribed text as the question
+                        String modifiedQuestion = _transcription;
+                        if (secondDropdownValue != 'None') {
+                          modifiedQuestion +=
+                              ' I am from $secondDropdownValue.';
+                        }
+
+                        final res = await fetchResponse(modifiedQuestion);
+
+                        setState(() {
+                          _loading = false;
+                        });
+
+                        if (res.type == "null") {
+                          return;
+                        } else {
+                          if (!context.mounted) {
+                            return;
+                          }
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (ctx) {
+                              return AnswerScreen(res: res);
+                            }),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        const SizedBox(
-          height: 20,
-        ),
-      ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed:
+            _speechToText.isNotListening ? _startListening : _stopListening,
+        tooltip: 'Listen',
+        child: Icon(_speechToText.isNotListening ? Icons.mic_off : Icons.mic),
+      ),
     );
   }
 }

@@ -11,9 +11,6 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'dart:io';
-import 'package:speech_to_text/speech_recognition_error.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'dart:async';
 
 const List<String> list = <String>['English', 'Hindi', 'Telugu', 'Tamil'];
 const List<String> secondList = <String>[
@@ -85,8 +82,8 @@ Future<String> getAudioFilePath() async {
 }
 
 class _InputFormState extends State<InputForm> {
-  stt.SpeechToText _speech = stt.SpeechToText(); //_speech = _speechToText
-  bool _isListening = false; //_isListening= _speechEnabled
+  stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
 
   String _transcription = '';
   TextEditingController _questionController = TextEditingController();
@@ -108,7 +105,7 @@ class _InputFormState extends State<InputForm> {
       );
     } else {
       setState(() => _isListening = false);
-      _speech.stop(); //SSSHBCHBHEBHBEBH
+      _speech.stop();
     }
   }
 

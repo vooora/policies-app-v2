@@ -196,21 +196,27 @@ class _InputFormState extends State<InputForm> {
                         child: TextField(
                           controller: _questionController,
                           onSubmitted: (value) {
-                            //in attempt to make enter button on simulator work
+                            // Update the state with the submitted value
                             setState(() {
                               _question = value;
                             });
                           },
                           onChanged: (value) {
+                            // Update the state with the typed value
                             setState(() {
                               _question = value;
                             });
                           },
+                          maxLines:
+                              null, // Allow the TextField to grow dynamically
+                          minLines: 1, // Set the minimum number of lines
                           decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5)),
-                              label: Text("Enter your question",
-                                  style: ThemeText.bodyText)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            labelText: "Enter your question",
+                            labelStyle: ThemeText.bodyText,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 5),

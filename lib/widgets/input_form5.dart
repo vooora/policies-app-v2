@@ -151,7 +151,7 @@ class _InputFormState extends State<InputForm> {
   String dropdownValue = list.first;
   @override
   Widget build(BuildContext context) {
-    final icon = _isListening ? Icons.stop : Icons.mic;
+    final icon = _isListening ? Icons.mic : Icons.mic;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,

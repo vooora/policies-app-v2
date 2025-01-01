@@ -251,10 +251,16 @@ class _InputFormState extends State<InputForm> {
                         onTapUp: (_) async {
                           // Stop listening when the button is released
                           await _speech.stop();
+                          setState(() {
+                            _question = _transcription;
+                          });
                         },
                         onTapCancel: () async {
                           // Stop listening if the press is canceled (e.g., user drags away)
                           await _speech.stop();
+                          setState(() {
+                            _question = _transcription;
+                          });
                         },
                         child: Container(
                           decoration: BoxDecoration(

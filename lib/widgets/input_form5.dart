@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:policies_new/data/prompts.dart';
 import 'package:policies_new/models/Response.dart';
 import 'package:policies_new/screens/answer_screen.dart';
 import 'package:http/http.dart' as http;
@@ -81,6 +82,20 @@ Future<String> getAudioFilePath() async {
   String filePath = '${appDocDir.path}/my_audio.aac';
   return filePath;
 }
+  int getLanguageNum(String language){
+    switch (language){
+      case "English":
+        return 0;
+      case "Hindi":
+        return 1;
+      case "Telugu":
+        return 2;
+      case "Tamil":
+        return 3;
+      default:
+        return 0;
+    }
+  }
 
 class _InputFormState extends State<InputForm> {
   stt.SpeechToText _speech = stt.SpeechToText();
@@ -96,20 +111,17 @@ class _InputFormState extends State<InputForm> {
   void initState() {
     super.initState();
     _loadLanguagePreference();
-  }
 
+  }
+String languageVal = "English";
+String stateVal = "None";
   Future<void> _loadLanguagePreference() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      dropdownValue = prefs.getString('selectedLanguage') ?? list.first;
+      languageVal = prefs.getString('selectedLanguage') ?? list.first;
+      stateVal = prefs.getString('selectedState') ?? "None";
     });
   }
-
-  Future<void> _saveLanguagePreference(String language) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedLanguage', language);
-  }
-
   Future<void> _listen() async {
     if (!_isListening && await _speech.initialize()) {
       setState(() => _isListening = true);
@@ -121,7 +133,7 @@ class _InputFormState extends State<InputForm> {
           });
           print('Transcription: $_transcription');
         },
-        localeId: getLanguageCode(dropdownValue), // Set language
+        localeId: getLanguageCode(languageVal), // Set language
       );
     } else {
       setState(() => _isListening = false);
@@ -149,7 +161,6 @@ class _InputFormState extends State<InputForm> {
 
   bool _loading = false;
   var _question = "";
-  String dropdownValue = list.first;
   @override
   Widget build(BuildContext context) {
     final icon = _isListening ? Icons.mic : Icons.mic;
@@ -164,53 +175,9 @@ class _InputFormState extends State<InputForm> {
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 47),
               child: Column(
                 children: [
-                  Text('ASK A QUESTION', style: ThemeText.titleText2),
-                  const SizedBox(height: 50),
-                  DropdownButtonFormField(
-                    dropdownColor: Colors.white,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5)),
-                        label: Text("Choose Input Language",
-                            style: ThemeText.bodyText)),
-                    value: dropdownValue,
-                    onChanged: (String? value) {
-                      setState(() {
-                        dropdownValue = value!;
-                      });
-                      _saveLanguagePreference(value!);
-                    },
-                    items: list.map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, style: TextStyle(fontSize: 12)),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 13),
-                  DropdownButtonFormField(
-                    dropdownColor: Colors.white,
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5)),
-                        label: Text("Choose Input State",
-                            style: ThemeText.bodyText)),
-                    value: secondDropdownValue,
-                    onChanged: (String? value) {
-                      setState(() {
-                        secondDropdownValue = value!;
-                      });
-                    },
-                    items: secondList
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, style: TextStyle(fontSize: 10.9)),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 13),
+                  Text(prompts[getLanguageNum(languageVal)].title, style: ThemeText.titleText2),
+                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   Row(
                     children: [
                       Expanded(
@@ -235,7 +202,7 @@ class _InputFormState extends State<InputForm> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(5),
                             ),
-                            labelText: "Enter your question",
+                            labelText: prompts[getLanguageNum(languageVal)].label3,
                             labelStyle: ThemeText.bodyText,
                           ),
                         ),
@@ -289,6 +256,20 @@ class _InputFormState extends State<InputForm> {
                               color: Colors.white, size: _isPressed ? 40 : 30),
                         ),
                       ),
+                            color: iconCol,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: EdgeInsets.all(
+                              padVal), // Optional: Add padding for better UX
+                          child: Icon(icon, color: Colors.white, size: iconSize),
+                        ),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
                       SizedBox(
                         //see change
                         height: 50,
@@ -319,9 +300,9 @@ class _InputFormState extends State<InputForm> {
                                 _loading = true;
                               });
                               String modifiedQuestion = _question;
-                              if (secondDropdownValue != 'None') {
+                              if (stateVal != 'None') {
                                 modifiedQuestion +=
-                                    'I am from $secondDropdownValue. Answer in the language $dropdownValue.';
+                                    'I am from $stateVal. Answer in the language $languageVal';
                               }
                               final res = await fetchResponse(modifiedQuestion);
                               setState(() {

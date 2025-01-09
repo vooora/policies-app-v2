@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:policies_new/screens/home_screen.dart';
+import 'package:policies_new/screens/question_screen.dart';
 import 'package:policies_new/utils.dart';
 
 class NextQuestionButton extends StatelessWidget {
@@ -12,7 +13,7 @@ class NextQuestionButton extends StatelessWidget {
     return TextButton(
       onPressed: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (ctx) {
-          return Homescreen();
+          return QuestionScreen();
         }));
       },
       style: ButtonStyle(

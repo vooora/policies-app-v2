@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:policies_new/screens/language_screen.dart';
 import 'package:policies_new/widgets/input_form5.dart';
 
 class Homescreen extends StatelessWidget {
@@ -6,14 +7,6 @@ class Homescreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("lib/assets/background1.png"),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: const InputForm()));
+    return LanguageScreen();
   }
 }

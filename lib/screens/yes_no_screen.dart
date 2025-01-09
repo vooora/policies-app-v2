@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:policies_new/utils.dart';
+import 'package:policies_new/widgets/filledbutton.dart';
 import 'package:policies_new/widgets/nextquestion_button.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,10 +14,9 @@ class YesNoScreen extends StatefulWidget {
 }
 
 class _YesNoScreenState extends State<YesNoScreen> {
-  FlutterTts flutterTts = FlutterTts();
+  final FlutterTts flutterTts = FlutterTts();
   String selectedLanguage = 'en'; // Default language
   bool _isSpeaking = false; // Track speaking state
-  late SharedPreferences prefs;
 
   @override
   void initState() {
@@ -25,7 +25,7 @@ class _YesNoScreenState extends State<YesNoScreen> {
   }
 
   void _loadLanguagePreference() async {
-    prefs = await SharedPreferences.getInstance();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     String? language = prefs.getString('language') ?? 'en';
     setState(() {
       selectedLanguage = language;
@@ -106,13 +106,15 @@ class _YesNoScreenState extends State<YesNoScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(widget.resBody['value'] as String,
-                              style: ThemeText.yesNoText),
+                          Text(
+                            valueText,
+                            style: ThemeText.yesNoText,
+                          ),
                           const SizedBox(
                             height: 20,
                           ),
                           Text(
-                            widget.resBody['content'] as String,
+                            contentText,
                             style: ThemeText.bodyText,
                           ),
                         ],
@@ -129,7 +131,7 @@ class _YesNoScreenState extends State<YesNoScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed:
-            _isSpeaking ? _stop : () => _speak(valueText + ' ' + contentText),
+            _isSpeaking ? _stop : () => _speak('$valueText. $contentText'),
         child: Icon(
           _isSpeaking ? Icons.stop : Icons.volume_up,
           color: Colors.white,

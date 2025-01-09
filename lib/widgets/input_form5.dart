@@ -100,6 +100,7 @@ Future<String> getAudioFilePath() async {
 class _InputFormState extends State<InputForm> {
   stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
+  bool _isPressed = false;
 
   String _transcription = '';
   TextEditingController _questionController = TextEditingController();
@@ -162,10 +163,7 @@ String stateVal = "None";
   var _question = "";
   @override
   Widget build(BuildContext context) {
-    final double padVal = _isListening ? 16: 12;
-    final double iconSize = _isListening ? 32 : 28;
-    final iconCol = _isListening ? Colors.red : Colors.teal;
-    final icon = _isListening ? Icons.stop : Icons.mic;
+    final icon = _isListening ? Icons.mic : Icons.mic;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -209,25 +207,55 @@ String stateVal = "None";
                           ),
                         ),
                       ),
-                      const SizedBox(width: 5),
+                    ],
+                  ),
+                  const SizedBox(height: 13),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       GestureDetector(
                         onTapDown: (_) async {
                           // Start listening when the button is pressed
                           await _listen();
                           setState(() {
+                            _isPressed = true;
                             _question = _transcription;
                           });
                         },
                         onTapUp: (_) async {
                           // Stop listening when the button is released
                           await _speech.stop();
+                          setState(() {
+                            _question = _transcription;
+                            _isPressed = false;
+                          });
                         },
                         onTapCancel: () async {
                           // Stop listening if the press is canceled (e.g., user drags away)
                           await _speech.stop();
+                          setState(() {
+                            _isPressed = false;
+                            _question = _transcription;
+                          });
                         },
-                        child: Container(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: _isPressed
+                              ? 80
+                              : 50, // Increase size when pressed
+                          height: _isPressed
+                              ? 80
+                              : 50, // Increase size when pressed
                           decoration: BoxDecoration(
+                            color: _isPressed
+                                ? ThemeColours.accentColor
+                                : ThemeColours.primaryColor,
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: Icon(icon,
+                              color: Colors.white, size: _isPressed ? 40 : 30),
+                        ),
+                      ),
                             color: iconCol,
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -244,7 +272,7 @@ String stateVal = "None";
                     children: [
                       SizedBox(
                         //see change
-                        height: 40,
+                        height: 50,
                         width: 115,
                         child: GestureDetector(
                           //in attempt to make enter button on simulator work

@@ -109,161 +109,165 @@ class _QuestionState extends State<QuestionContainer> {
     if (flowchart.isEmpty) {
       return const Center(child: Text("No questions available."));
     }
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24.0, 0.0, 24.0, 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Card(
-                color: Colors.white,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-                  child: Column(
-                    children: [
-                      // Header Row
-                      currentActionText == null && index == 0
-                          ? Text(
-                              "QUESTION ${index + 1}",
-                              style: ThemeText.titleText2,
-                            )
-                          : currentActionText == null && index != 0
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    IconButton(
-                                        padding: const EdgeInsets.all(0),
-                                        onPressed: () {
-                                          setState(() {
-                                            index--;
-                                          });
-                                        },
-                                        icon: const Icon(
-                                            size: 20,
-                                            Icons.arrow_back_ios,
-                                            color:
-                                                ThemeColours.secondaryColor)),
-                                    Text(
-                                      "QUESTION ${index + 1}",
-                                      style: ThemeText.titleText2,
-                                    ),
-                                    const SizedBox(width: 40),
-                                  ],
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    IconButton(
-                                        padding: const EdgeInsets.all(0),
-                                        onPressed: () {
-                                          setState(() {
-                                            currentActionText = null;
-                                          });
-                                        },
-                                        icon: const Icon(Icons.arrow_back_ios,
-                                            color:
-                                                ThemeColours.secondaryColor)),
-                                  ],
-                                ),
-                      const SizedBox(height: 20),
-                      // Question or Action Text
-                      Text(
-                        currentActionText ??
-                            flowchart[index]["question"] ??
-                            "No question available.",
-                        style: ThemeText.flowchartText,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 40),
-                      // Buttons
-                      currentActionText == null
-                          ? Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                  Expanded(
-                                    child: Filledbutton(
-                                      onPressed: () {
-                                        final noAction =
-                                            flowchart[index]["no_action"];
-                                        handleAction(noAction);
-                                      },
-                                      text: 'No',
-                                      buttoncolor: ThemeColours.primaryColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Filledbutton(
-                                      onPressed: () {
-                                        final yesAction =
-                                            flowchart[index]["yes_action"];
-                                        handleAction(yesAction);
-                                      },
-                                      text: 'Yes',
-                                      buttoncolor: ThemeColours.accentColor,
-                                    ),
-                                  ),
-                                ])
-                          : index < flowchart.length - 1
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                      Expanded(
-                                        child: Filledbutton(
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24.0, 0.0, 24.0, 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Card(
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 30, vertical: 30),
+                    child: Column(
+                      children: [
+                        // Header Row
+                        currentActionText == null && index == 0
+                            ? Text(
+                                "QUESTION ${index + 1}",
+                                style: ThemeText.titleText2,
+                              )
+                            : currentActionText == null && index != 0
+                                ? Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      IconButton(
+                                          padding: const EdgeInsets.all(0),
                                           onPressed: () {
                                             setState(() {
-                                              index++;
+                                              index--;
+                                            });
+                                          },
+                                          icon: const Icon(
+                                              size: 20,
+                                              Icons.arrow_back_ios,
+                                              color:
+                                                  ThemeColours.secondaryColor)),
+                                      Text(
+                                        "QUESTION ${index + 1}",
+                                        style: ThemeText.titleText2,
+                                      ),
+                                      const SizedBox(width: 40),
+                                    ],
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      IconButton(
+                                          padding: const EdgeInsets.all(0),
+                                          onPressed: () {
+                                            setState(() {
                                               currentActionText = null;
                                             });
                                           },
-                                          text: 'See Next Question',
-                                          buttoncolor: ThemeColours.accentColor,
-                                        ),
+                                          icon: const Icon(Icons.arrow_back_ios,
+                                              color:
+                                                  ThemeColours.secondaryColor)),
+                                    ],
+                                  ),
+                        const SizedBox(height: 20),
+                        // Question or Action Text
+                        Text(
+                          currentActionText ??
+                              flowchart[index]["question"] ??
+                              "No question available.",
+                          style: ThemeText.flowchartText,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 40),
+                        // Buttons
+                        currentActionText == null
+                            ? Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                    Expanded(
+                                      child: Filledbutton(
+                                        onPressed: () {
+                                          final noAction =
+                                              flowchart[index]["no_action"];
+                                          handleAction(noAction);
+                                        },
+                                        text: 'x',
+                                        buttoncolor: ThemeColours.primaryColor,
                                       ),
-                                    ])
-                              : const SizedBox(height: 10),
-                      const SizedBox(height: 30),
-                      // Read Out Button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              _isSpeaking
-                                  ? Icons.stop
-                                  : Icons.volume_up, // Dynamically switch icons
-                              color: ThemeColours.primaryColor, // Icon color
-                              size: 30, // Icon size
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Filledbutton(
+                                        onPressed: () {
+                                          final yesAction =
+                                              flowchart[index]["yes_action"];
+                                          handleAction(yesAction);
+                                        },
+                                        text: '✔',
+                                        buttoncolor: ThemeColours.accentColor,
+                                      ),
+                                    ),
+                                  ])
+                            : index < flowchart.length - 1
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                        Expanded(
+                                          child: Filledbutton(
+                                            onPressed: () {
+                                              setState(() {
+                                                index++;
+                                                currentActionText = null;
+                                              });
+                                            },
+                                            text: '→',
+                                            buttoncolor:
+                                                ThemeColours.accentColor,
+                                          ),
+                                        ),
+                                      ])
+                                : const SizedBox(height: 10),
+                        const SizedBox(height: 30),
+                        // Read Out Button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                _isSpeaking
+                                    ? Icons.stop
+                                    : Icons
+                                        .volume_up, // Dynamically switch icons
+                                color: ThemeColours.primaryColor, // Icon color
+                                size: 30, // Icon size
+                              ),
+                              onPressed: () {
+                                if (_isSpeaking) {
+                                  _stop();
+                                } else {
+                                  // Read current question or action text
+                                  _speak(currentActionText ??
+                                      flowchart[index]["question"] ??
+                                      "No question available.");
+                                }
+                              },
                             ),
-                            onPressed: () {
-                              if (_isSpeaking) {
-                                _stop();
-                              } else {
-                                // Read current question or action text
-                                _speak(currentActionText ??
-                                    flowchart[index]["question"] ??
-                                    "No question available.");
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              const NextQuestionButton(),
-            ],
-          ),
-        )
-      ],
+                const SizedBox(height: 10),
+                const NextQuestionButton(),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }

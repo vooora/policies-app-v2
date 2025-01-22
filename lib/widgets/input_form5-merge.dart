@@ -66,7 +66,7 @@ String getLanguageCode(String language) {
     case 'Tamil':
       return 'ta_IN';
     default:
-      return 'hi_IN'; // Default to English if no match found
+      return 'en_US'; // Default to English if no match found
   }
 }
 
@@ -94,7 +94,7 @@ int getLanguageNum(String language) {
     case "Tamil":
       return 3;
     default:
-      return 1;
+      return 0;
   }
 }
 
@@ -114,12 +114,12 @@ class _InputFormState extends State<InputForm> {
     _loadLanguagePreference();
   }
 
-  String languageVal = "Hindi";
+  String languageVal = "English";
   String stateVal = "None";
   Future<void> _loadLanguagePreference() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      languageVal = prefs.getString('selectedLanguage') ?? "Hindi";
+      languageVal = prefs.getString('selectedLanguage') ?? list.first;
       stateVal = prefs.getString('selectedState') ?? "None";
     });
   }
@@ -165,9 +165,6 @@ class _InputFormState extends State<InputForm> {
   var _question = "";
   @override
   Widget build(BuildContext context) {
-    final double padVal = _isListening ? 16 : 12;
-    final double iconSize = _isListening ? 32 : 28;
-    final iconCol = _isListening ? Colors.red : Colors.teal;
     final icon = _isListening ? Icons.mic : Icons.mic;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -181,7 +178,7 @@ class _InputFormState extends State<InputForm> {
               child: Column(
                 children: [
                   Text(prompts[getLanguageNum(languageVal)].title,
-                      style: ThemeText.titleText),
+                      style: ThemeText.titleText2),
                   const SizedBox(height: 10),
                   const SizedBox(height: 20),
                   Row(
@@ -211,10 +208,15 @@ class _InputFormState extends State<InputForm> {
                             labelText:
                                 prompts[getLanguageNum(languageVal)].label3,
                             labelStyle: ThemeText.bodyText,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 5),
+                          ), //input decor
+                        ), //textfield
+                      ), //expanded
+                    ],
+                  ), //row
+                  const SizedBox(height: 13),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       GestureDetector(
                         onTapDown: (_) async {
                           // Start listening when the button is pressed
@@ -264,82 +266,56 @@ class _InputFormState extends State<InputForm> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Expanded(
-                        child: SizedBox(
-                          //see change
-                          height: 40,
-                          child: GestureDetector(
-                            child: IconButton(
-                                style: ButtonStyle(
-                                    shape: MaterialStateProperty.all<
-                                            RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(5))),
-                                    backgroundColor: MaterialStateProperty.all(
-                                        ThemeColours.primaryColor)),
-                                icon: Icon(Icons.arrow_back_ios,
-                                    color: Colors.white),
-                                onPressed: () async {
-                                  Navigator.of(context).pop();
-                                }),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: SizedBox(
-                          //see change
-                          height: 40,
-                          child: GestureDetector(
-                            //in attempt to make enter button on simulator work
-                            onTap: () {
+                      SizedBox(
+                        //see change
+                        height: 50,
+                        width: 115,
+                        child: GestureDetector(
+                          //in attempt to make enter button on simulator work
+                          onTap: () {
+                            setState(() {
+                              _loading = true;
+                            });
+                          },
+                          child: IconButton(
+                            style: ButtonStyle(
+                                shape: MaterialStateProperty.all<
+                                        RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(5))),
+                                backgroundColor: MaterialStateProperty.all(
+                                    ThemeColours.primaryColor)),
+                            icon: !_loading
+                                ? const Icon(Icons.arrow_forward_outlined,
+                                    color: Colors.white)
+                                : const CircularProgressIndicator(//change theme
+                                    ),
+                            onPressed: () async {
                               setState(() {
                                 _loading = true;
                               });
-                            },
-                            child: IconButton(
-                              style: ButtonStyle(
-                                  shape: MaterialStateProperty.all<
-                                          RoundedRectangleBorder>(
-                                      RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(5))),
-                                  backgroundColor: MaterialStateProperty.all(
-                                      ThemeColours.primaryColor)),
-                              icon: !_loading
-                                  ? const Icon(Icons.arrow_forward_ios,
-                                      color: Colors.white)
-                                  : const CircularProgressIndicator(
-                                      //change theme
-                                      ),
-                              onPressed: () async {
-                                setState(() {
-                                  _loading = true;
-                                });
-                                String modifiedQuestion = _question;
-                                if (stateVal != 'None') {
-                                  modifiedQuestion +=
-                                      'I am from $stateVal. Answer in the language $languageVal';
-                                }
-                                final res =
-                                    await fetchResponse(modifiedQuestion);
-                                setState(() {
-                                  _loading = false;
-                                });
-                                if (res.type == "null") {
+                              String modifiedQuestion = _question;
+                              if (stateVal != 'None') {
+                                modifiedQuestion +=
+                                    'I am from $stateVal. Answer in the language $languageVal';
+                              }
+                              final res = await fetchResponse(modifiedQuestion);
+                              setState(() {
+                                _loading = false;
+                              });
+                              if (res.type == "null") {
+                                return;
+                              } else {
+                                if (!context.mounted) {
                                   return;
-                                } else {
-                                  if (!context.mounted) {
-                                    return;
-                                  }
-                                  Navigator.of(context)
-                                      .push(MaterialPageRoute(builder: (ctx) {
-                                    return AnswerScreen(res: res);
-                                  }));
                                 }
-                              },
-                            ),
+                                Navigator.of(context)
+                                    .push(MaterialPageRoute(builder: (ctx) {
+                                  return AnswerScreen(res: res);
+                                }));
+                              }
+                            },
                           ),
                         ),
                       ),

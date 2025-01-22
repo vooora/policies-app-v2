@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:policies_new/screens/home_screen.dart';
+import 'package:policies_new/screens/state_screen.dart';
 import 'package:policies_new/utils.dart';
 
 class NextQuestionButton extends StatelessWidget {
@@ -12,7 +13,7 @@ class NextQuestionButton extends StatelessWidget {
     return TextButton(
       onPressed: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (ctx) {
-          return Homescreen();
+          return StateScreen();
         }));
       },
       style: ButtonStyle(
@@ -24,7 +25,7 @@ class NextQuestionButton extends StatelessWidget {
       child: const Padding(
         padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
         child: Text(
-          'Ask Another Question',
+          '⌂',
           style: TextStyle(
             color: ThemeColours.secondaryColor,
             fontFamily: 'Montserrat',

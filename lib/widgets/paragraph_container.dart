@@ -158,7 +158,7 @@ class _ParagraphState extends State<ParagraphContainer> {
                                 ? const SizedBox()
                                 : Expanded(
                                     child: Filledbutton(
-                                    text: "Previous",
+                                    text: "←",
                                     buttoncolor: index == 0
                                         ? Colors.white
                                         : ThemeColours.primaryColor,
@@ -180,7 +180,7 @@ class _ParagraphState extends State<ParagraphContainer> {
                                     buttoncolor: index == headings.length - 1
                                         ? Colors.white
                                         : ThemeColours.accentColor,
-                                    text: "Next",
+                                    text: "→",
                                     onPressed: () {
                                       setState(() {
                                         if (index < headings.length - 1) {
